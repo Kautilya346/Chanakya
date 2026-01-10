@@ -1,0 +1,167 @@
+"""
+Orchestrator Schemas
+====================
+
+Pydantic models for orchestrator input/output and tool responses.
+"""
+
+from typing import Optional, List, Literal
+from pydantic import BaseModel, Field
+from datetime import datetime, timezone
+
+
+class OrchestratorInput(BaseModel):
+    """
+    Input to the orchestrator layer.
+    """
+    
+    query: str = Field(
+        ...,
+        description="The teacher's query in English (post-NLP processing)",
+        min_length=1
+    )
+    
+    context: Optional[dict] = Field(
+        default=None,
+        description="Additional context (class info, subject, previous interactions)"
+    )
+    
+    session_id: Optional[str] = Field(
+        default=None,
+        description="Session ID for conversation tracking"
+    )
+
+
+class ActivityOutput(BaseModel):
+    """
+    Output from the Activity Generator tool.
+    """
+    
+    activity_name: str = Field(
+        ...,
+        description="Name of the activity"
+    )
+    
+    description: str = Field(
+        ...,
+        description="Brief description of the activity"
+    )
+    
+    materials_needed: List[str] = Field(
+        default_factory=list,
+        description="Simple materials needed (commonly available in classrooms)"
+    )
+    
+    steps: List[str] = Field(
+        ...,
+        description="Step-by-step instructions for the teacher"
+    )
+    
+    duration_minutes: int = Field(
+        default=10,
+        description="Estimated duration in minutes"
+    )
+    
+    learning_outcome: str = Field(
+        ...,
+        description="What students will understand after this activity"
+    )
+    
+    tips: Optional[List[str]] = Field(
+        default=None,
+        description="Optional tips for the teacher"
+    )
+
+
+class OrchestratorOutput(BaseModel):
+    """
+    Output from the orchestrator layer.
+    """
+    
+    tool_used: str = Field(
+        ...,
+        description="Which tool was selected to handle the query"
+    )
+    
+    reasoning: str = Field(
+        ...,
+        description="Why this tool was selected"
+    )
+    
+    result: ActivityOutput | dict = Field(
+        ...,
+        description="The result from the selected tool"
+    )
+    
+    confidence: float = Field(
+        default=1.0,
+        ge=0.0,
+        le=1.0,
+        description="Confidence in the tool selection and response"
+    )
+    
+    processing_time_ms: float = Field(
+        default=0.0,
+        description="Total processing time"
+    )
+    
+    timestamp: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="When processing completed"
+    )
+    
+    error: Optional[str] = Field(
+        default=None,
+        description="Error message if processing failed"
+    )
+
+
+class ConversationMessage(BaseModel):
+    """
+    A single message in the conversation history.
+    """
+    
+    role: Literal["user", "assistant", "system"] = Field(
+        ...,
+        description="Role of the message sender"
+    )
+    
+    content: str = Field(
+        ...,
+        description="Message content"
+    )
+    
+    timestamp: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="When the message was sent"
+    )
+
+
+class ConversationContext(BaseModel):
+    """
+    Maintains conversation context for the orchestrator.
+    """
+    
+    session_id: str = Field(
+        ...,
+        description="Unique session identifier"
+    )
+    
+    messages: List[ConversationMessage] = Field(
+        default_factory=list,
+        description="Conversation history"
+    )
+    
+    metadata: dict = Field(
+        default_factory=dict,
+        description="Additional metadata (class, subject, grade, etc.)"
+    )
+    
+    def add_message(self, role: str, content: str):
+        """Add a message to the conversation history."""
+        self.messages.append(ConversationMessage(role=role, content=content))
+    
+    def get_history_text(self, max_messages: int = 10) -> str:
+        """Get recent conversation history as text."""
+        recent = self.messages[-max_messages:]
+        return "\n".join([f"{m.role}: {m.content}" for m in recent])
