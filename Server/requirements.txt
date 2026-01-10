@@ -8,6 +8,10 @@ python-dateutil>=2.8.0
 # Gemini AI (new package)
 google-genai>=1.0.0
 
+# LangGraph for orchestration
+langgraph>=1.0.0
+langchain-core>=0.3.72,<1.0.0
+
 # Optional: IndicBERT (for future fine-tuning)
 # transformers>=4.35.0
 # torch>=2.0.0
