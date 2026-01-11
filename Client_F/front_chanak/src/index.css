@@ -3,42 +3,42 @@
 @tailwind utilities;
 
 @font-face {
-  font-family: 'TT Firs Neue';
-  src: url('/tt_firs_neue/TT Firs Neue Trial Regular.ttf') format('truetype');
+  font-family: "TT Firs Neue";
+  src: url("/tt_firs_neue/TT Firs Neue Trial Regular.ttf") format("truetype");
   font-weight: 400;
   font-style: normal;
 }
 
 @font-face {
-  font-family: 'TT Firs Neue';
-  src: url('/tt_firs_neue/TT Firs Neue Trial Medium.ttf') format('truetype');
+  font-family: "TT Firs Neue";
+  src: url("/tt_firs_neue/TT Firs Neue Trial Medium.ttf") format("truetype");
   font-weight: 500;
   font-style: normal;
 }
 
 @font-face {
-  font-family: 'TT Firs Neue';
-  src: url('/tt_firs_neue/TT Firs Neue Trial Bold.ttf') format('truetype');
+  font-family: "TT Firs Neue";
+  src: url("/tt_firs_neue/TT Firs Neue Trial Bold.ttf") format("truetype");
   font-weight: 700;
   font-style: normal;
 }
 
 @font-face {
-  font-family: 'TT Firs Neue';
-  src: url('/tt_firs_neue/TT Firs Neue Trial Light.ttf') format('truetype');
+  font-family: "TT Firs Neue";
+  src: url("/tt_firs_neue/TT Firs Neue Trial Light.ttf") format("truetype");
   font-weight: 300;
   font-style: normal;
 }
 
 @font-face {
-  font-family: 'TT Firs Neue';
-  src: url('/tt_firs_neue/TT Firs Neue Trial Italic.ttf') format('truetype');
+  font-family: "TT Firs Neue";
+  src: url("/tt_firs_neue/TT Firs Neue Trial Italic.ttf") format("truetype");
   font-weight: 400;
   font-style: italic;
 }
 
 :root {
-  font-family: 'TT Firs Neue', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: "TT Firs Neue", system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
@@ -74,7 +74,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  font-family: 'TT Firs Neue', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: "TT Firs Neue", system-ui, Avenir, Helvetica, Arial, sans-serif;
   background-color: #ffffff;
   color: #213547;
   scrollbar-width: none; /* Firefox */
@@ -129,4 +129,29 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
+}
+
+/* Grid Texture Overlay */
+.grid-texture {
+  position: relative;
+}
+
+.grid-texture::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url("/grid_bg_trans.png");
+  background-repeat: repeat;
+  background-size: auto;
+  opacity: 0.07;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.grid-texture > * {
+  position: relative;
+  z-index: 2;
 }
