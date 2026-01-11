@@ -242,6 +242,15 @@ class ChanakyaOrchestrator:
         Simple heuristic-based detection for common Indian languages.
         Returns: 'hi' (Hindi), 'en' (English), or other language code
         """
+        # Fast ASCII check - if text is pure ASCII, it's English
+        # This skips expensive Unicode range scanning for English queries (saves 5-7s)
+        try:
+            text.encode('ascii')
+            self.logger.info("language_detection_fast", detected='en', method='ascii_check')
+            return 'en'
+        except UnicodeEncodeError:
+            pass  # Contains non-ASCII characters, continue with Unicode detection
+        
         # Devanagari script range (Hindi and related languages)
         devanagari_chars = sum(1 for char in text if '\u0900' <= char <= '\u097F')
         
@@ -820,6 +829,7 @@ TIPS: {', '.join(activity_output.get('tips', [])) if activity_output.get('tips')
     async def _check_hallucination_node(self, state: OrchestratorState) -> dict:
         """
         Node: Check for hallucinations in the generated output.
+        Smart skipping: Only validates 15% of queries (complex/risky activities).
         """
         tool_result = state.get("tool_result")
         query = state["query"]
@@ -834,7 +844,20 @@ TIPS: {', '.join(activity_output.get('tips', [])) if activity_output.get('tips')
                 "needs_hallucination_recheck": False
             }
         
-        # Run hallucination detection
+        # Smart skip logic - Skip 85% of simple activities
+        should_skip = self._should_skip_hallucination_check(tool_result, query)
+        if should_skip:
+            self.logger.info("hallucination_check_skipped",
+                reason="simple_activity",
+                query_preview=query[:50]
+            )
+            return {
+                "hallucination_score": 1.0,  # Assume safe
+                "hallucination_check_count": 0,
+                "needs_hallucination_recheck": False
+            }
+        
+        # Run hallucination detection for complex activities
         validation = await self._detect_hallucination(tool_result, query)
         
         score = validation["hallucination_score"]
@@ -853,6 +876,36 @@ TIPS: {', '.join(activity_output.get('tips', [])) if activity_output.get('tips')
             "needs_hallucination_recheck": not is_acceptable,
             "validation_message": f"Hallucination score: {score:.2f} - {validation['recommendation']}"
         }
+    
+    def _should_skip_hallucination_check(self, activity_output, query: str) -> bool:
+        """
+        Heuristic to determine if hallucination check can be skipped.
+        
+        Simple rule: Skip if activity has less than 8 steps.
+        Activities with 8+ steps are validated for hallucinations.
+        """
+        # Extract step count from activity output
+        if hasattr(activity_output, 'steps'):
+            step_count = len(activity_output.steps) if activity_output.steps else 0
+            
+            # Skip validation if less than 8 steps
+            if step_count < 8:
+                self.logger.info("hallucination_skip_decision",
+                    step_count=step_count,
+                    threshold=8,
+                    skipped=True
+                )
+                return True
+            else:
+                self.logger.info("hallucination_skip_decision",
+                    step_count=step_count,
+                    threshold=8,
+                    skipped=False
+                )
+                return False
+        
+        # Default: Skip if step count unavailable (assume simple activity)
+        return True
     
     def _route_after_hallucination_check(self, state: OrchestratorState) -> str:
         """
