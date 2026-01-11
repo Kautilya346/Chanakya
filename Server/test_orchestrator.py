@@ -35,8 +35,12 @@ async def test_orchestrator():
             "context": {"grade": "Class 8", "subject": "Mathematics"}
         },
         {
-            "query": "Students are confused about Ohm's law",
-            "context": {"grade": "Class 10", "subject": "Physics"}
+            "query": "Students are making too much noise and not listening to me",
+            "context": {"grade": "Class 6", "class_size": 50}
+        },
+        {
+            "query": "My class is completely out of control, everyone is talking and I can't teach",
+            "context": {"grade": "Class 7", "class_size": 45}
         },
     ]
     

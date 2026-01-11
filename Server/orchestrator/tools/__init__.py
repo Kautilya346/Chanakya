@@ -6,7 +6,9 @@ Tools available to the orchestrator for handling different types of queries.
 """
 
 from .activity_generator import ActivityGeneratorTool
+from .crisis_handler import CrisisHandlerTool
 
 __all__ = [
     "ActivityGeneratorTool",
+    "CrisisHandlerTool",
 ]
